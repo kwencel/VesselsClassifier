@@ -11,7 +11,8 @@ repositories {
 
 dependencies {
     compile(
-        'org.openpnp:opencv:3.2.0-1'
+        'org.openpnp:opencv:3.2.0-1',
+        'com.google.guava:guava:21.0'
     )
     testCompile(
         'junit:junit:4.12'
