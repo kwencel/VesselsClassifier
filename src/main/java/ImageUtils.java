@@ -1,17 +1,31 @@
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
+
+import org.opencv.core.*;
+
+import static org.opencv.imgcodecs.Imgcodecs.CV_LOAD_IMAGE_UNCHANGED;
+import static org.opencv.imgcodecs.Imgcodecs.imdecode;
 
 public class ImageUtils {
+
+    public static Mat loadImageFromInputStream(InputStream is) throws IOException {
+        int nRead;
+        byte[] data = new byte[16 * 1024];
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        byte[] bytes = buffer.toByteArray();
+        return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
+    }
 
     public static byte[][] extractGreen(BufferedImage image) {
         byte[][] array = new byte[image.getHeight()][image.getWidth()];

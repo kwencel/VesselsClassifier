@@ -1,4 +1,5 @@
-import java.awt.image.BufferedImage;
+import org.opencv.core.Mat;
+
 import java.util.Set;
 
 public abstract class AbstractClassifier {
@@ -9,5 +10,5 @@ public abstract class AbstractClassifier {
         this.trainingVectors = trainingVectors;
     }
 
-    abstract boolean isVessel(BufferedImage image, int x, int y);
+    abstract boolean isVessel(Mat image, int x, int y);
 }

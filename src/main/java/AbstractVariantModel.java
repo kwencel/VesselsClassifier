@@ -1,9 +1,10 @@
-import java.awt.image.BufferedImage;
+import org.opencv.core.Mat;
+
 import java.util.List;
 
 public interface AbstractVariantModel {
 
-    List<Short> getVector(BufferedImage image);
+    List<Short> getVector(Mat image);
 
     String toString();
 }

@@ -1,7 +1,7 @@
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import org.opencv.core.Mat;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,7 +19,7 @@ public class KNNClassifier extends AbstractClassifier {
     }
 
     @Override
-    public boolean isVessel(BufferedImage image, int x, int y) {
+    public boolean isVessel(Mat image, int x, int y) {
         // TODO Generate a small square surrounding (x, y) and pass it to the Variant constructor
         Variant analyzedVariant = new Variant(image); // There should be a cut image, not the function parameter
         List<Short> analyzedVector = analyzedVariant.getVector(VariantModel.DIFFERENTIAL);

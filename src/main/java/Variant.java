@@ -1,11 +1,12 @@
-import java.awt.image.BufferedImage;
+import org.opencv.core.Mat;
+
 import java.util.List;
 
 public class Variant {
 
-    private BufferedImage image;
+    private Mat image;
 
-    public Variant(BufferedImage image) {
+    public Variant(Mat image) {
         this.image = image;
     }
 
