@@ -14,11 +14,11 @@ public class TrainingVariant extends Variant {
         this.isVessel = isVessel;
     }
 
-    public TrainingVariant(String filepath, boolean isVessel) throws IOException {
+    public TrainingVariant(String filepath, boolean isVessel) {
         this(Imgcodecs.imread(filepath), isVessel);
     }
 
-    public TrainingVariant(File file, boolean isVessel) throws IOException {
+    public TrainingVariant(File file, boolean isVessel) {
         this((Imgcodecs.imread(file.getAbsolutePath())), isVessel);
     }
 

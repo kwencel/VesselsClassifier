@@ -19,11 +19,9 @@ public class NormalizedTrainingSet {
      */
     public NormalizedTrainingSet(List<TrainingVector> trainingVectors) {
         this.trainingVectors = new ArrayList<>(trainingVectors);
-        means = StatisticUtils.means(this.trainingVectors);
-        standardDeviations = StatisticUtils.standardDeviations(this.trainingVectors, means);
-        this.trainingVectors.forEach((trainingVector) -> {
-            trainingVector.normalize(means, standardDeviations);
-        });
+        this.means = StatisticUtils.means(this.trainingVectors);
+        this.standardDeviations = StatisticUtils.standardDeviations(this.trainingVectors, means);
+        this.trainingVectors.forEach((trainingVector) -> trainingVector.normalize(means, standardDeviations));
     }
 
     public List<Double> getMeans() {

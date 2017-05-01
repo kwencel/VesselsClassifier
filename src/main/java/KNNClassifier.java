@@ -30,8 +30,9 @@ public class KNNClassifier extends AbstractClassifier {
             distanceMappedTrainingVectors.put(trainingVector, distance(analyzedVector, trainingVector.getVectorData()));
         }
 
-        final Set<TrainingVector> neighbouringVariants
-                = trainingSet.getTrainingVectors()
+        // FIXME Distances could be the same - this could cause an exception in the BiMap
+        final Set<TrainingVector> neighbouringVariants =
+             trainingSet.getTrainingVectors()
                         .stream()
                         .map(distanceMappedTrainingVectors::get)
                         .sorted()

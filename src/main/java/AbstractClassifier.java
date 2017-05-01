@@ -1,7 +1,5 @@
 import org.opencv.core.Mat;
 
-import java.util.Set;
-
 public abstract class AbstractClassifier {
 
     protected final NormalizedTrainingSet trainingSet;

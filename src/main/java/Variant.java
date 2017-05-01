@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Variant {
 
-    private Mat image;
+    private final Mat image;
 
     public Variant(Mat image) {
         this.image = image;
