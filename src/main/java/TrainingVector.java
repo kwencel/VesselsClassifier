@@ -2,16 +2,16 @@ import java.util.List;
 
 public class TrainingVector {
 
-    private final List<Short> vectorData;
+    private final List<Double> vectorData;
 
     private final boolean isVessel;
 
-    public TrainingVector(List<Short> vectorData, boolean isVessel) {
+    public TrainingVector(List<Double> vectorData, boolean isVessel) {
         this.vectorData = vectorData;
         this.isVessel = isVessel;
     }
 
-    public List<Short> getVectorData() {
+    public List<Double> getVectorData() {
         return vectorData;
     }
 
@@ -19,4 +19,3 @@ public class TrainingVector {
         return isVessel;
     }
 }
-

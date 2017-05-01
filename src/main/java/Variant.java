@@ -1,3 +1,4 @@
+
 import org.opencv.core.Mat;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public class Variant {
         this.image = image;
     }
 
-    public List<Short> getVector(VariantModel model) {
+    public List<Double> getVector(VariantModel model) {
         return model.getVector(image);
     }
 }

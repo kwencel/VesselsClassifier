@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface AbstractVariantModel {
 
-    List<Short> getVector(Mat image);
+    List<Double> getVector(Mat image);
 
     String toString();
 }
