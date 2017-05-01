@@ -18,4 +18,8 @@ public class TrainingVector {
     public boolean isVessel() {
         return isVessel;
     }
+
+    public void normalize(List<Double> means, List<Double> standardDeviations) {
+        StatisticUtils.normalize(vectorData, means, standardDeviations);
+    }
 }

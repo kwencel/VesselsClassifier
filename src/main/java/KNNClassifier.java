@@ -10,8 +10,8 @@ public class KNNClassifier extends AbstractClassifier {
 
     final private short numberOfNeighbours;
 
-    public KNNClassifier(Set<TrainingVector> trainingVectors, short numberOfNeighbours) {
-        super(trainingVectors);
+    public KNNClassifier(NormalizedTrainingSet trainingSet, short numberOfNeighbours) {
+        super(trainingSet);
         if (numberOfNeighbours % 2 == 0) {
             throw new IllegalArgumentException("Number of neighbours must not be even");
         }
@@ -21,23 +21,25 @@ public class KNNClassifier extends AbstractClassifier {
     @Override
     public boolean isVessel(Mat image, int x, int y) {
         // TODO Generate a small square surrounding (x, y) and pass it to the Variant constructor
-        Variant analyzedVariant = new Variant(image); // There should be a cut image, not the function parameter
-        List<Double> analyzedVector = analyzedVariant.getVector(VariantModel.DIFFERENTIAL);
-        BiMap<TrainingVector, Double> distanceMappedTrainingVectors = HashBiMap.create();
+        final Variant analyzedVariant = new Variant(image); // There should be a cut image, not the function parameter
+        final List<Double> analyzedVector = analyzedVariant.getVector(VariantModel.DIFFERENTIAL);
+        StatisticUtils.normalize(analyzedVector, trainingSet.getMeans(), trainingSet.getStandardDeviations());
+        final BiMap<TrainingVector, Double> distanceMappedTrainingVectors = HashBiMap.create();
 
-        for (TrainingVector trainingVector : trainingVectors) {
+        for (TrainingVector trainingVector : trainingSet.getTrainingVectors()) {
             distanceMappedTrainingVectors.put(trainingVector, distance(analyzedVector, trainingVector.getVectorData()));
         }
 
-        Set<TrainingVector> neighbouringVariants
-                = trainingVectors.stream()
+        final Set<TrainingVector> neighbouringVariants
+                = trainingSet.getTrainingVectors()
+                        .stream()
                         .map(distanceMappedTrainingVectors::get)
                         .sorted()
                         .limit(numberOfNeighbours)
                         .map(d -> distanceMappedTrainingVectors.inverse().get(d))
                         .collect(Collectors.toSet());
 
-        long positiveCount = neighbouringVariants.stream().filter(TrainingVector::isVessel).count();
+        final long positiveCount = neighbouringVariants.stream().filter(TrainingVector::isVessel).count();
         return positiveCount > (numberOfNeighbours / 2);
     }
 

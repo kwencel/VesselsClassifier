@@ -4,10 +4,10 @@ import java.util.Set;
 
 public abstract class AbstractClassifier {
 
-    protected final Set<TrainingVector> trainingVectors;
+    protected final NormalizedTrainingSet trainingSet;
 
-    protected AbstractClassifier(Set<TrainingVector> trainingVectors) {
-        this.trainingVectors = trainingVectors;
+    protected AbstractClassifier(NormalizedTrainingSet trainingSet) {
+        this.trainingSet = trainingSet;
     }
 
     abstract boolean isVessel(Mat image, int x, int y);
