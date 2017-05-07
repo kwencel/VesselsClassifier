@@ -1,4 +1,3 @@
-
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
@@ -10,9 +9,11 @@ import java.util.List;
 import java.util.Random;
 
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 
 import static org.opencv.imgcodecs.Imgcodecs.CV_LOAD_IMAGE_UNCHANGED;
 import static org.opencv.imgcodecs.Imgcodecs.imdecode;
+import org.opencv.imgproc.Imgproc;
 
 public class ImageUtils {
 
@@ -27,14 +28,22 @@ public class ImageUtils {
         return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
     }
 
-    public static byte[][] extractGreen(BufferedImage image) {
-        byte[][] array = new byte[image.getHeight()][image.getWidth()];
-        for (int row = 0; row < image.getHeight(); ++row) {
-            for (int col = 0; col < image.getWidth(); col++) {
-                array[row][col] = (byte) ((image.getRGB(col, row) >> 8) & 0xFF); // Green extraction
-            }
-        }
-        return array;
+    /**
+     * Extract green channel from image.
+     *
+     * @param image BGR image
+     * @return single channel image with green channel from input image as intensity
+     */
+    public static Mat extractGreen(Mat image) {
+        final List<Mat> in = new ArrayList<>();
+        in.add(image);
+        final Mat green = new Mat(image.height(), image.width(), CvType.CV_8UC1);
+        final List<Mat> out = new ArrayList<>();
+        out.add(green);
+        final int[] swaps = {1, 0};
+        final MatOfInt fromTo = new MatOfInt(swaps);
+        Core.mixChannels(in, out, fromTo);
+        return out.get(0);
     }
 
     /**
@@ -178,5 +187,80 @@ public class ImageUtils {
         final Scalar black = new Scalar(0, 0, 0);
         Core.copyMakeBorder(image, imageWithPadding, size, size, size, size, Core.BORDER_CONSTANT, black);
         return imageWithPadding;
+    }
+
+    public static Mat gradientMagnitudeMaximumOverScales(Mat image, int startScale, int endScale, int step) {
+        Mat maximum = new Mat(image.size(), CvType.CV_32F);
+
+        for (int i = startScale; i <= endScale; i += step) {
+            final Mat magnitude = gradientMagnitude(image, i);
+            final Mat divided = new Mat();
+            Core.divide(magnitude, new Scalar(i), divided);
+            Core.max(divided, maximum, maximum);
+        }
+        return maximum;
+    }
+
+    private static Mat gradientMagnitude(Mat image, int scale) {
+        final Mat kernel = Imgproc.getGaussianKernel(3 * scale, scale);
+        final Mat gauss = new Mat();
+        Imgproc.filter2D(image, gauss, CvType.CV_32F, kernel);
+        final Mat sobelX = new Mat();
+        Imgproc.Sobel(gauss, sobelX, CvType.CV_32F, 1, 0);
+        final Mat sobelY = new Mat();
+        Imgproc.Sobel(gauss, sobelY, CvType.CV_32F, 0, 1);
+        final Mat magnitude = new Mat(sobelX.size(), sobelX.type());
+        Core.magnitude(sobelX, sobelY, magnitude);
+        return magnitude;
+    }
+
+    public static Mat largestEigenvalueMaximumOverScales(Mat image, int startScale, int endScale, int step) {
+        Mat maximum = new Mat(image.size(), CvType.CV_32F);
+
+        for (int i = startScale; i <= endScale; i += step) {
+            final Mat eigen = largeEigenvalue(image, i);
+            final Mat divided = new Mat();
+            Core.divide(eigen, new Scalar(i), divided);
+            Core.max(divided, maximum, maximum);
+        }
+        return maximum;
+    }
+
+    private static Mat largeEigenvalue(Mat image, int scale) {
+        final Mat kernel = Imgproc.getGaussianKernel(3 * scale, scale);
+        final Mat gauss = new Mat();
+        Imgproc.filter2D(image, gauss, CvType.CV_32F, kernel);
+        final Mat sobelXX = new Mat();
+        Imgproc.Sobel(gauss, sobelXX, CvType.CV_32F, 2, 0);
+        Imgcodecs.imwrite("/home/krzysztof/Pictures/Wallpapers/sobelXX.jpg", sobelXX);
+        final Mat sobelYY = new Mat();
+        Imgproc.Sobel(gauss, sobelYY, CvType.CV_32F, 0, 2);
+        Imgcodecs.imwrite("/home/krzysztof/Pictures/Wallpapers/sobelYY.jpg", sobelYY);
+        final Mat sobelXY = new Mat();
+        Imgproc.Sobel(gauss, sobelXY, CvType.CV_32F, 1, 1);
+        Imgcodecs.imwrite("/home/krzysztof/Pictures/Wallpapers/sobelXY.jpg", sobelXY);
+        Mat alpha = calculateAlpha(sobelXX, sobelYY, sobelXY);
+        Core.divide(alpha, new Scalar(2), alpha);
+        final Mat sum = new Mat();
+        Core.divide(sobelXX, new Scalar(2), sobelXX);
+        Core.divide(sobelYY, new Scalar(2), sobelYY);
+        Core.add(sobelXX, sobelYY, sum);
+        final Mat eigen = new Mat();
+        Core.add(sum, alpha, eigen);
+
+        return eigen;
+    }
+
+    private static Mat calculateAlpha(Mat sobelXX, Mat sobelYY, Mat sobelXY) {
+        final Mat sum = new Mat();
+        Core.subtract(sobelXX, sobelYY, sum);
+        final Mat square1 = new Mat();
+        Core.pow(sum, 2, square1);
+        final Mat square2 = new Mat();
+        Core.pow(sobelXY, 2, square2);
+        Core.add(square1, square2, sum);
+        final Mat alpha = new Mat();
+        Core.sqrt(sum, alpha);
+        return alpha;
     }
 }
