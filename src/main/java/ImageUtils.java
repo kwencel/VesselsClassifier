@@ -1,8 +1,11 @@
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -262,5 +265,34 @@ public class ImageUtils {
         final Mat alpha = new Mat();
         Core.sqrt(sum, alpha);
         return alpha;
+    }
+
+    public static void generateSamplesForFolder(String inputPath, String outputPath, int howManyPositives,
+            int howManyNegatives, int size) {
+        final Path imagesPath = Paths.get(inputPath, "images");
+        final Path masksPath = Paths.get(inputPath, "masks");
+        final Path manualsPath = Paths.get(inputPath, "manuals");
+        final File[] images = imagesPath.toFile().listFiles();
+        final File[] masks = masksPath.toFile().listFiles();
+        final File[] manuals = manualsPath.toFile().listFiles();
+        int positivesIndex = 1;
+        int negativesIndex = 1;
+        for (int i = 0; i < images.length; i++) {
+            final Mat image = Imgcodecs.imread(images[i].getAbsolutePath());
+            final Mat mask = Imgcodecs.imread(masks[i].getAbsolutePath());
+            final Mat manual = Imgcodecs.imread(manuals[i].getAbsolutePath());
+            final List<Mat> positives = sampleImage(image, mask, manual, true, howManyPositives, size).get(0);
+            for (int j = 0; j < positives.size(); j++) {
+                final Mat imageToSave = positives.get(j);
+                final Path outputImagePath = Paths.get(outputPath, String.format("T_%1$03d.png", positivesIndex++));
+                Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+            }
+            final List<Mat> negatives = sampleImage(image, mask, manual, false, howManyNegatives, size).get(0);
+            for (int j = 0; j < negatives.size(); j++) {
+                final Mat imageToSave = negatives.get(j);
+                final Path outputImagePath = Paths.get(outputPath, String.format("F_%1$03d.png", negativesIndex++));
+                Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+            }
+        }
     }
 }
