@@ -19,7 +19,8 @@ public enum VariantModel implements AbstractVariantModel {
     HU_MOMENTS {
         @Override
         public List<Double> getVector(Mat image) {
-            final Moments moments = Imgproc.moments(image);
+            final Mat green = ImageUtils.extractGreen(image);
+            final Moments moments = Imgproc.moments(green);
             final Mat huMoments = new Mat();
             Imgproc.HuMoments(moments, huMoments);
             final List<Double> vector = new ArrayList<>();

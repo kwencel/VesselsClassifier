@@ -9,20 +9,22 @@ import java.util.stream.Collectors;
 public class KNNClassifier extends AbstractClassifier {
 
     final private short numberOfNeighbours;
+    final private VariantModel variantModel;
 
-    public KNNClassifier(NormalizedTrainingSet trainingSet, short numberOfNeighbours) {
+    public KNNClassifier(NormalizedTrainingSet trainingSet, VariantModel variantModel, short numberOfNeighbours) {
         super(trainingSet);
         if (numberOfNeighbours % 2 == 0) {
             throw new IllegalArgumentException("Number of neighbours must not be even");
         }
         this.numberOfNeighbours = numberOfNeighbours;
+        this.variantModel = variantModel;
     }
 
     @Override
     public boolean isVessel(Mat image, int x, int y) {
         // TODO Generate a small square surrounding (x, y) and pass it to the Variant constructor
         final Variant analyzedVariant = new Variant(image); // There should be a cut image, not the function parameter
-        final List<Double> analyzedVector = analyzedVariant.getVector(VariantModel.DIFFERENTIAL);
+        final List<Double> analyzedVector = analyzedVariant.getVector(variantModel);
         StatisticUtils.normalize(analyzedVector, trainingSet.getMeans(), trainingSet.getStandardDeviations());
         final BiMap<TrainingVector, Double> distanceMappedTrainingVectors = HashBiMap.create();
 
@@ -31,8 +33,8 @@ public class KNNClassifier extends AbstractClassifier {
         }
 
         // FIXME Distances could be the same - this could cause an exception in the BiMap
-        final Set<TrainingVector> neighbouringVariants =
-             trainingSet.getTrainingVectors()
+        final Set<TrainingVector> neighbouringVariants
+                = trainingSet.getTrainingVectors()
                         .stream()
                         .map(distanceMappedTrainingVectors::get)
                         .sorted()
