@@ -50,7 +50,7 @@ public class StatisticUtils {
             for (TrainingVector trainingVector : trainingVectors) {
                 sum += trainingVector.getVectorData().get(i);
             }
-            means.set(i, sum / numberOfAttributes);
+            means.add(sum / numberOfAttributes);
         }
         return means;
     }
@@ -72,7 +72,7 @@ public class StatisticUtils {
                 final Double deviation = trainingVector.getVectorData().get(i) - means.get(i);
                 sumOfSquaredDeviations += deviation * deviation;
             }
-            standardDeviations.set(i, Math.sqrt(sumOfSquaredDeviations / numberOfAttributes));
+            standardDeviations.add(Math.sqrt(sumOfSquaredDeviations / numberOfAttributes));
         }
         return standardDeviations;
     }
