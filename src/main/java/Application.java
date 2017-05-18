@@ -48,7 +48,7 @@ public class Application {
             for (int x = 0; x < image.width(); x++) {
                 final Mat surrounding = ImageUtils.getSurroundingPixels(image, x, y, SIZE);
                 if (classifier.isVessel(surrounding, surrounding.width() / 2, surrounding.height() / 2)) {
-                    result.put(y, x, new double[]{255});
+                    result.put(y, x, 255, 255, 255);
                 }
             }
         }

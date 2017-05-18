@@ -1,9 +1,6 @@
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import org.opencv.core.Mat;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class KNNClassifier extends AbstractClassifier {
@@ -22,24 +19,20 @@ public class KNNClassifier extends AbstractClassifier {
 
     @Override
     public boolean isVessel(Mat image, int x, int y) {
-        // TODO Generate a small square surrounding (x, y) and pass it to the Variant constructor
         final Variant analyzedVariant = new Variant(image); // There should be a cut image, not the function parameter
         final List<Double> analyzedVector = analyzedVariant.getVector(variantModel);
         StatisticUtils.normalize(analyzedVector, trainingSet.getMeans(), trainingSet.getStandardDeviations());
-        final BiMap<TrainingVector, Double> distanceMappedTrainingVectors = HashBiMap.create();
+        final Map<TrainingVector, Double> distanceMappedTrainingVectors = new HashMap<>();
 
         for (TrainingVector trainingVector : trainingSet.getTrainingVectors()) {
             distanceMappedTrainingVectors.put(trainingVector, distance(analyzedVector, trainingVector.getVectorData()));
         }
 
-        // FIXME Distances could be the same - this could cause an exception in the BiMap
         final Set<TrainingVector> neighbouringVariants
                 = trainingSet.getTrainingVectors()
                         .stream()
-                        .map(distanceMappedTrainingVectors::get)
-                        .sorted()
+                        .sorted(Comparator.comparingDouble(distanceMappedTrainingVectors::get))
                         .limit(numberOfNeighbours)
-                        .map(d -> distanceMappedTrainingVectors.inverse().get(d))
                         .collect(Collectors.toSet());
 
         final long positiveCount = neighbouringVariants.stream().filter(TrainingVector::isVessel).count();
