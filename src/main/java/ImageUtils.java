@@ -117,10 +117,44 @@ public class ImageUtils {
         if (size < 0) {
             throw new IllegalArgumentException("Negative size: " + size);
         }
-        final Mat paddedImage = addBlackBorder(image, size);
-        final int regionSide = 2 * size + 1;
-        final Rect region = new Rect(x, y, regionSide, regionSide);
-        return new Mat(paddedImage, region);
+        int paddingLeft, paddingRight, paddingTop, paddingBottom;
+        int startX, startY, endX, endY;
+        if (size > x) {
+            startX = 0;
+            paddingLeft = size - x;
+        } else {
+            startX = x - size;
+            paddingLeft = 0;
+        }
+        if (size > y) {
+            startY = 0;
+            paddingTop = size - y;
+        } else {
+            startY = y - size;
+            paddingTop = 0;
+        }
+        if (x + size >= width) {
+            endX = width;
+            paddingRight = size + x - width + 1;
+        } else {
+            endX = x + size + 1;
+            paddingRight = 0;
+        }
+        if (y + size >= height) {
+            endY = height;
+            paddingBottom = size + y - height + 1;
+        } else {
+            endY = y + size + 1;
+            paddingBottom = 0;
+        }
+        final Scalar black = new Scalar(0, 0, 0);
+        Mat submat = image.submat(startY, endY, startX, endX);
+        if (paddingBottom == 0 && paddingLeft == 0 && paddingRight == 0 && paddingTop == 0) {
+            return submat; //If surrounding is entierly contained inside image borders
+        }
+        final Mat result = new Mat();
+        Core.copyMakeBorder(submat, result, paddingTop, paddingBottom, paddingLeft, paddingRight, Core.BORDER_CONSTANT, black);
+        return result;
     }
 
     /**
