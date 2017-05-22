@@ -6,16 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import static org.opencv.imgcodecs.Imgcodecs.CV_LOAD_IMAGE_UNCHANGED;
 import static org.opencv.imgcodecs.Imgcodecs.imdecode;
+
 import org.opencv.imgproc.Imgproc;
 
 public class ImageUtils {
@@ -31,6 +29,17 @@ public class ImageUtils {
         return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
     }
 
+    public static Mat equalizeHistogram(Mat image) {
+        List<Mat> channels = new ArrayList<>();
+        Mat img_hist_equalized = new Mat();
+        Imgproc.cvtColor(image, img_hist_equalized, Imgproc.COLOR_BGR2YCrCb); //change the color image from BGR to YCrCb format
+        Core.split(img_hist_equalized, channels); //split the image into channels
+        Imgproc.equalizeHist(img_hist_equalized, img_hist_equalized); //equalize histogram on the 1st channel (Y)
+        Core.merge(channels,img_hist_equalized); //merge 3 channels including the modified 1st channel into one image
+        Imgproc.cvtColor(img_hist_equalized, img_hist_equalized, Imgproc.COLOR_YCrCb2BGR); //change the color image from YCrCb to BGR format (to
+        return img_hist_equalized;
+    }
+
     /**
      * Extract green channel from image.
      *
@@ -38,11 +47,9 @@ public class ImageUtils {
      * @return single channel image with green channel from input image as intensity
      */
     public static Mat extractGreen(Mat image) {
-        final List<Mat> in = new ArrayList<>();
-        in.add(image);
+        final List<Mat> in = Collections.singletonList(image);
         final Mat green = new Mat(image.height(), image.width(), CvType.CV_8UC1);
-        final List<Mat> out = new ArrayList<>();
-        out.add(green);
+        final List<Mat> out = Collections.singletonList(green);
         final int[] swaps = {1, 0};
         final MatOfInt fromTo = new MatOfInt(swaps);
         Core.mixChannels(in, out, fromTo);

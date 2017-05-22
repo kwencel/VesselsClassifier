@@ -41,6 +41,14 @@ public class Application {
             }
             ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
+        final Path resultsPath = Paths.get(trainingDir, "results");
+        final File resultsFolder = resultsPath.toFile();
+        if (!resultsFolder.exists()) {
+            boolean succeeded = resultsFolder.mkdir();
+            if (!succeeded) {
+                throw new RuntimeException("Could not create 'results' directory");
+            }
+        }
         final File[] samples = samplesFolder.listFiles();
         System.out.println(String.format("There are total of %1d samples of size %2d",
                                          samples.length, SIZE * 2 + 1
@@ -48,6 +56,7 @@ public class Application {
         final AbstractClassifier classifier = getTrainedClassifier(samples);
 
         final Mat image = Imgcodecs.imread(workingFile);
+//        final Mat image_eq = ImageUtils.equalizeHistogram(image);
         final Mat result = new Mat(image.size(), image.type(), new Scalar(0));
         ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
@@ -69,10 +78,9 @@ public class Application {
             System.gc();
         }
 
-        String extension = workingFile.substring(workingFile.length() - 4);
-        String resultPath = workingFile.substring(0, workingFile.length() - 4) + "_result" + extension;
-        System.out.println(resultPath);
-        Imgcodecs.imwrite(resultPath, result);
+        String resultFile = Paths.get(resultsPath.toString(), (new File(workingFile)).getName()).toAbsolutePath().toString();
+        System.out.println(resultFile);
+        Imgcodecs.imwrite(resultFile, result);
     }
 
     private AbstractClassifier getTrainedClassifier(File[] samples) {

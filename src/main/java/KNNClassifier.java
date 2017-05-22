@@ -40,7 +40,7 @@ public class KNNClassifier extends AbstractClassifier {
     }
 
     private double distance(List<Double> vector1, List<Double> vector2) {
-        int sumBeforeRoot = 0;
+        double sumBeforeRoot = 0;
         for (int attr = 0; attr < vector1.size(); ++attr) {
             sumBeforeRoot += Math.pow(vector1.get(attr) - vector2.get(attr), 2);
         }
