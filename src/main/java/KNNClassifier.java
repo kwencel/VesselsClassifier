@@ -1,7 +1,7 @@
 import org.opencv.core.Mat;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class KNNClassifier extends AbstractClassifier {
 
@@ -28,14 +28,13 @@ public class KNNClassifier extends AbstractClassifier {
             distanceMappedTrainingVectors.put(trainingVector, distance(analyzedVector, trainingVector.getVectorData()));
         }
 
-        final Set<TrainingVector> neighbouringVariants
-                = trainingSet.getTrainingVectors()
-                        .stream()
-                        .sorted(Comparator.comparingDouble(distanceMappedTrainingVectors::get))
-                        .limit(numberOfNeighbours)
-                        .collect(Collectors.toSet());
+        final Stream<TrainingVector> neighbouringVariants =
+                trainingSet.getTrainingVectors()
+                           .stream()
+                           .sorted(Comparator.comparingDouble(distanceMappedTrainingVectors::get))
+                           .limit(numberOfNeighbours);
 
-        final long positiveCount = neighbouringVariants.stream().filter(TrainingVector::isVessel).count();
+        final long positiveCount = neighbouringVariants.filter(TrainingVector::isVessel).count();
         return positiveCount > (numberOfNeighbours / 2);
     }
 

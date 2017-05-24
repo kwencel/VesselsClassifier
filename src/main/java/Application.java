@@ -14,10 +14,11 @@ import java.util.concurrent.TimeUnit;
 
 public class Application {
 
-    private static final int SIZE = 32;
-    private static final int NUMBER_OF_SAMPLES = 20;
+    private static final int SIZE = 10;
+    private static final int NUMBER_OF_SAMPLES = 50;
     private static final short NUMBER_OF_NEIGHBOURS = 11;
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
+    private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen);
 
     public static void main(String[] args) throws Exception {
         nu.pattern.OpenCV.loadShared();
@@ -39,7 +40,8 @@ public class Application {
             if (!succeeded) {
                 throw new RuntimeException("Could not create 'samples' directory");
             }
-            ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
+            ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), imageLoader,
+                                                NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
         final Path resultsPath = Paths.get(trainingDir, "results");
         final File resultsFolder = resultsPath.toFile();
@@ -50,13 +52,10 @@ public class Application {
             }
         }
         final File[] samples = samplesFolder.listFiles();
-        System.out.println(String.format("There are total of %1d samples of size %2d",
-                                         samples.length, SIZE * 2 + 1
-        ));
+        System.out.println(String.format("There are total of %1d samples of size %2d", samples.length, SIZE * 2 + 1));
         final AbstractClassifier classifier = getTrainedClassifier(samples);
 
-        final Mat image = Imgcodecs.imread(workingFile);
-//        final Mat image_eq = ImageUtils.equalizeHistogram(image);
+        final Mat image = imageLoader.loadImage(workingFile);
         final Mat result = new Mat(image.size(), image.type(), new Scalar(0));
         ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {

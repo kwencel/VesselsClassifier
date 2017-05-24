@@ -29,6 +29,16 @@ public class ImageUtils {
         return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
     }
 
+    public static Mat equalizeOnlyGreen(Mat image) {
+        List<Mat> channels = new ArrayList<>();
+        Core.split(image, channels);
+        Mat green = channels.get(1);
+        Imgproc.equalizeHist(green, green);
+        Mat equalized = new Mat();
+        Core.merge(channels, equalized);
+        return equalized;
+    }
+
     public static Mat equalizeHistogram(Mat image) {
         List<Mat> channels = new ArrayList<>();
         Mat img_hist_equalized = new Mat();
@@ -47,13 +57,9 @@ public class ImageUtils {
      * @return single channel image with green channel from input image as intensity
      */
     public static Mat extractGreen(Mat image) {
-        final List<Mat> in = Collections.singletonList(image);
-        final Mat green = new Mat(image.height(), image.width(), CvType.CV_8UC1);
-        final List<Mat> out = Collections.singletonList(green);
-        final int[] swaps = {1, 0};
-        final MatOfInt fromTo = new MatOfInt(swaps);
-        Core.mixChannels(in, out, fromTo);
-        return out.get(0);
+        List<Mat> bgr = new ArrayList<>();
+        Core.split(image, bgr);
+        return bgr.get(1);
     }
 
     /**
@@ -308,8 +314,9 @@ public class ImageUtils {
         return alpha;
     }
 
-    public static void generateSamplesForFolder(String inputPath, String outputPath, int howManyPositives,
-            int howManyNegatives, int size) {
+    public static void generateSamplesForFolder(String inputPath, String outputPath, ImageLoader imageLoader,
+                                                int howManyPositives, int howManyNegatives, int size) {
+
         final Path imagesPath = Paths.get(inputPath, "images");
         final Path masksPath = Paths.get(inputPath, "masks");
         final Path manualsPath = Paths.get(inputPath, "manuals");
@@ -319,7 +326,7 @@ public class ImageUtils {
         int positivesIndex = 1;
         int negativesIndex = 1;
         for (int i = 0; i < images.length; i++) {
-            final Mat image = Imgcodecs.imread(images[i].getAbsolutePath());
+            final Mat image = imageLoader.loadImage(images[i].getAbsolutePath());
             final Mat mask = Imgcodecs.imread(masks[i].getAbsolutePath());
             final Mat manual = Imgcodecs.imread(manuals[i].getAbsolutePath());
             final List<Mat> positives = sampleImage(image, mask, manual, true, howManyPositives, size).get(0);
