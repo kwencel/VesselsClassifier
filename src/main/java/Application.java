@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class Application {
 
     private static final int SIZE = 10;
-    private static final int NUMBER_OF_SAMPLES = 50;
+    private static final int NUMBER_OF_SAMPLES = 20;
     private static final short NUMBER_OF_NEIGHBOURS = 11;
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
     private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen);
@@ -40,10 +40,11 @@ public class Application {
             if (!succeeded) {
                 throw new RuntimeException("Could not create 'samples' directory");
             }
+            System.out.println("Generating samples...");
             ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), imageLoader,
                                                 NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
-        final Path resultsPath = Paths.get(trainingDir, "results");
+        final Path resultsPath = Paths.get(new File(workingFile).getParent(), "results");
         final File resultsFolder = resultsPath.toFile();
         if (!resultsFolder.exists()) {
             boolean succeeded = resultsFolder.mkdir();
@@ -59,6 +60,8 @@ public class Application {
         final Mat result = new Mat(image.size(), image.type(), new Scalar(0));
         ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
+            System.out.println("Processing image " + workingFile);
+            ProgressInfo progressInfo = new ProgressInfo(image.width() * image.height());
             for (int y = 0; y < image.height(); y++) {
                 final int finalY = y;
                 exec.submit(() -> {
@@ -67,10 +70,12 @@ public class Application {
                         if (classifier.isVessel(surrounding, surrounding.width() / 2, surrounding.height() / 2)) {
                             result.put(finalY, x, 255, 255, 255);
                         }
+                        progressInfo.incrementWorkCount();
                     }
                 });
             }
-        } finally {
+        }
+        finally {
             exec.shutdown();
             // Wait forever for all threads
             exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);

@@ -325,6 +325,7 @@ public class ImageUtils {
         final File[] manuals = manualsPath.toFile().listFiles();
         int positivesIndex = 1;
         int negativesIndex = 1;
+        final ProgressInfo progressInfo = new ProgressInfo(images.length * (howManyPositives + howManyNegatives));
         for (int i = 0; i < images.length; i++) {
             final Mat image = imageLoader.loadImage(images[i].getAbsolutePath());
             final Mat mask = Imgcodecs.imread(masks[i].getAbsolutePath());
@@ -334,12 +335,14 @@ public class ImageUtils {
                 final Mat imageToSave = positives.get(j);
                 final Path outputImagePath = Paths.get(outputPath, String.format("T_%1$03d.png", positivesIndex++));
                 Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+                progressInfo.incrementWorkCount();
             }
             final List<Mat> negatives = sampleImage(image, mask, manual, false, howManyNegatives, size).get(0);
             for (int j = 0; j < negatives.size(); j++) {
                 final Mat imageToSave = negatives.get(j);
                 final Path outputImagePath = Paths.get(outputPath, String.format("F_%1$03d.png", negativesIndex++));
                 Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+                progressInfo.incrementWorkCount();
             }
         }
     }

@@ -5,16 +5,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-public class ImageLoader {
-    private final List<Function<Mat, Mat>> processors;
+/**
+ * @author Krzysztof Wencel
+ */
+public class ImageLoader extends ImageProcessor {
 
-    public ImageLoader() {
-        this.processors = null;
-    }
+    public ImageLoader() { }
 
     @SafeVarargs
-    public ImageLoader(Function<Mat, Mat>... processingFunction) {
-        this.processors = Arrays.asList(processingFunction);
+    public ImageLoader(Function<Mat, Mat>... processingFunctions) {
+        super(processingFunctions);
+    }
+
+    public ImageLoader(List<Function<Mat, Mat>> processingFunctions) {
+        super(processingFunctions);
     }
 
     /**
@@ -24,8 +28,10 @@ public class ImageLoader {
      */
     public Mat loadImage(String path) {
         Mat image = Imgcodecs.imread(path);
-        for (Function<Mat, Mat> processor : processors) {
-            image = processor.apply(image);
+        if (processors != null) {
+            for (Function<Mat, Mat> processor : processors) {
+                image = applyProcessors(image);
+            }
         }
         return image;
     }
