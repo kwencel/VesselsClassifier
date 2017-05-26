@@ -1,6 +1,7 @@
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -10,7 +11,9 @@ import java.util.function.Function;
  */
 public class ImageLoader extends ImageProcessor {
 
-    public ImageLoader() { }
+    public ImageLoader() {
+        super(new ArrayList<>());
+    }
 
     @SafeVarargs
     public ImageLoader(Function<Mat, Mat>... processingFunctions) {
@@ -28,9 +31,7 @@ public class ImageLoader extends ImageProcessor {
      */
     public Mat loadImage(String path) {
         Mat image = Imgcodecs.imread(path);
-        if (processors != null) {
-            image = applyProcessors(image);
-        }
+        image = applyProcessors(image);
         return image;
     }
 }

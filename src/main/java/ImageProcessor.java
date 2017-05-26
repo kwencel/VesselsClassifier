@@ -1,5 +1,6 @@
 import org.opencv.core.Mat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -12,15 +13,16 @@ public class ImageProcessor {
 
     @SafeVarargs
     protected ImageProcessor(Function<Mat, Mat>... processingFunctions) {
-        this.processors = Arrays.asList(processingFunctions);
+        List<Function<Mat, Mat>> functions = Arrays.asList(processingFunctions);
+        if (functions.contains(null)) {
+            this.processors = new ArrayList<>();
+        } else {
+            this.processors = functions;
+        }
     }
 
     protected ImageProcessor(List<Function<Mat, Mat>> processingFunctions) {
         this.processors = processingFunctions;
-    }
-
-    protected ImageProcessor() {
-        this.processors = null;
     }
 
     /**

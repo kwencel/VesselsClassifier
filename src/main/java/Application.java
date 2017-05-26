@@ -1,3 +1,4 @@
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -8,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class Application {
 
     private static final int SIZE = 10;
-    private static final int NUMBER_OF_SAMPLES = 20;
+    private static final int NUMBER_OF_SAMPLES = 5;
     private static final short NUMBER_OF_NEIGHBOURS = 11;
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
     private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen,
@@ -45,7 +47,8 @@ public class Application {
             ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), imageLoader,
                                                 NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
-        final Path resultsPath = Paths.get(new File(workingFile).getParent(), "results");
+        final File workingDir = new File(workingFile).getParentFile().getParentFile();
+        final Path resultsPath = Paths.get(workingDir.getAbsolutePath(), "results");
         final File resultsFolder = resultsPath.toFile();
         if (!resultsFolder.exists()) {
             boolean succeeded = resultsFolder.mkdir();
@@ -75,17 +78,25 @@ public class Application {
                     }
                 });
             }
-        }
-        finally {
+        } finally {
             exec.shutdown();
             // Wait forever for all threads
             exec.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             System.gc();
         }
 
-        String resultFile = Paths.get(resultsPath.toString(), (new File(workingFile)).getName()).toAbsolutePath().toString();
+        // Post-process the image
+        ImageProcessor postProcessor = new ImageProcessor((Mat resultImage) -> {
+            File mask = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks");
+            Mat maskImage = Imgcodecs.imread(mask.getAbsolutePath());
+            Core.min(resultImage, maskImage, result);
+            return result;
+        });
+        Mat processedResult = postProcessor.applyProcessors(result);
+
+        String resultFile = Paths.get(resultsPath.toString(), (new File(workingFile)).getName()).toString();
         System.out.println(resultFile);
-        Imgcodecs.imwrite(resultFile, result);
+        Imgcodecs.imwrite(resultFile, processedResult);
     }
 
     private AbstractClassifier getTrainedClassifier(File[] samples) {
@@ -97,5 +108,24 @@ public class Application {
         }
         final NormalizedTrainingSet trainingSet = new NormalizedTrainingSet(vectors);
         return new KNNClassifier(trainingSet, VARIANT_MODEL, NUMBER_OF_NEIGHBOURS);
+    }
+
+    private File getCorrespondingFile(String workingDir, String filename, String subfolder) {
+        File[] images = Paths.get(workingDir, "images").toFile().listFiles();
+        if (images == null) {
+            throw new RuntimeException("Images folder does not exist!");
+        }
+        int imageIndex = -1;
+        for (int i = 0; i < images.length; i++) {
+            if (Objects.equals(images[i].getName(), filename)) {
+                imageIndex = i;
+            }
+        }
+        // Get the file with the same index from a different subfolder
+        File[] otherFiles = Paths.get(workingDir, subfolder).toFile().listFiles();
+        if (otherFiles == null) {
+            throw new RuntimeException(subfolder + " folder does not exist!");
+        }
+        return otherFiles[imageIndex];
     }
 }
