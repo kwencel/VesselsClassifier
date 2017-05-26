@@ -29,9 +29,7 @@ public class ImageLoader extends ImageProcessor {
     public Mat loadImage(String path) {
         Mat image = Imgcodecs.imread(path);
         if (processors != null) {
-            for (Function<Mat, Mat> processor : processors) {
-                image = applyProcessors(image);
-            }
+            image = applyProcessors(image);
         }
         return image;
     }
