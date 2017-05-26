@@ -29,6 +29,56 @@ public class ImageUtils {
         return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
     }
 
+    public static Mat substractMeanFilter(Mat image, int size)
+    {
+        Mat result = new Mat();
+        Mat kernel = new Mat(size, size, CvType.CV_8SC1, new Scalar(1 / (size * size)));
+        Imgproc.filter2D(image, result, -1, kernel);
+        Core.subtract(image, result, result);
+        Imgproc.equalizeHist(result, result);
+        return result;
+    }
+
+    public static Mat opening(Mat image, int size)
+    {
+        Mat result = new Mat();
+        Mat kernel = Imgproc.getStructuringElement(0, new Size(size, size));
+        Imgproc.morphologyEx(image, result, Imgproc.MORPH_OPEN, kernel);
+        kernel.release();
+        return result;
+    }
+
+    public static Mat medianFilter(Mat image, int size)
+    {
+        Mat result = new Mat();
+        Imgproc.medianBlur(image, result, size);
+        return result;
+    }
+
+    public static Mat gaussianFilter(Mat image, int size, double sigma)
+    {
+        Mat result = new Mat();
+        Imgproc.GaussianBlur(image, result, new Size(size, size), sigma);
+        return result;
+    }
+
+    public static Mat backgroundHomogenization(Mat image)
+    {
+        List<Mat> channels = new ArrayList<>();
+        Core.split(image, channels);
+        Mat green = channels.get(1);
+
+        Mat open = opening(green, 11);
+        Mat median = medianFilter(open, 5);
+        Mat gaussian = gaussianFilter(median, 9, 1.8);
+        Mat shadeCorrected = substractMeanFilter(gaussian, 69);
+
+        Mat result = new Mat();
+        channels.set(1, shadeCorrected);
+        Core.merge(channels, result);
+        return result;
+    }
+    
     public static Mat equalizeOnlyGreen(Mat image) {
         List<Mat> channels = new ArrayList<>();
         Core.split(image, channels);

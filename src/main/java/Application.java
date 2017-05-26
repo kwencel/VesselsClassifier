@@ -18,7 +18,8 @@ public class Application {
     private static final int NUMBER_OF_SAMPLES = 20;
     private static final short NUMBER_OF_NEIGHBOURS = 11;
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
-    private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen);
+    private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen,
+             ImageUtils::backgroundHomogenization);
 
     public static void main(String[] args) throws Exception {
         nu.pattern.OpenCV.loadShared();
