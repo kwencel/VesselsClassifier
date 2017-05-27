@@ -1,3 +1,4 @@
+import com.google.common.io.Files;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -26,13 +27,13 @@ public class Application {
         nu.pattern.OpenCV.loadShared();
         Application app = new Application();
         if (args.length != 2) {
-            System.err.println("Proper arguments: <dir containing 'images', 'manuals' and 'masks' subdirs> <image_to_classify>");
+            System.err.println("Proper arguments: <Training dir containing 'images', 'manuals' and 'masks' subdirs> <image_to_classify>");
             System.exit(1);
         }
         app.run(args);
     }
 
-    private void run(String[] args) throws IOException, InterruptedException {
+    public void run(String[] args) throws IOException, InterruptedException {
         String trainingDir = args[0];
         String workingFile = args[1];
         final Path samplesPath = Paths.get(trainingDir, "samples");
@@ -86,16 +87,26 @@ public class Application {
 
         // Post-process the image
         ImageProcessor postProcessor = new ImageProcessor((Mat resultImage) -> {
-            File mask = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks");
-            Mat maskImage = Imgcodecs.imread(mask.getAbsolutePath());
-            Core.min(resultImage, maskImage, result);
+            String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
+                                                   "masks").getAbsolutePath();
+            Mat mask = Imgcodecs.imread(maskPath);
+            Core.min(resultImage, mask, result);
             return result;
         });
+
+        System.out.println("Postprocessing image");
         Mat processedResult = postProcessor.applyProcessors(result);
 
         String resultFile = Paths.get(resultsPath.toString(), (new File(workingFile)).getName()).toString();
-        System.out.println(resultFile);
+        System.out.println("Saving result mask " + resultFile);
         Imgcodecs.imwrite(resultFile, processedResult);
+
+        System.out.println("Computing and saving statistics");
+        String referenceManualPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
+                                               "manuals").getAbsolutePath();
+        Mat referenceManual = Imgcodecs.imread(referenceManualPath);
+        StatisticUtils.writeStatistics(referenceManual, result,
+                                       Paths.get(resultsPath.toString(), (Files.getNameWithoutExtension(workingFile) + "_stats.txt")).toString());
     }
 
     private AbstractClassifier getTrainedClassifier(File[] samples) {
@@ -127,4 +138,6 @@ public class Application {
         }
         return otherFiles[imageIndex];
     }
+
+
 }

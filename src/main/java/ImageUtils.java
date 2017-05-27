@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -22,6 +20,42 @@ import org.opencv.imgproc.Imgproc;
 
 public class ImageUtils {
 
+    public static boolean isWhite(double[] pixel) {
+        for (double color : pixel) {
+            if (color != 255) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static int isWhiteInt(double[] pixel) {
+        for (double color : pixel) {
+            if (color != 255) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+
+    public static boolean isBlack(double[] pixel) {
+        for (double color : pixel) {
+            if (color != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static int isBlackInt(double[] pixel) {
+        for (double color : pixel) {
+            if (color != 0) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+
     public static Mat loadImageFromInputStream(InputStream is) throws IOException {
         int nRead;
         byte[] data = new byte[16 * 1024];
@@ -33,7 +67,7 @@ public class ImageUtils {
         return imdecode(new MatOfByte(bytes), CV_LOAD_IMAGE_UNCHANGED);
     }
 
-    public static Mat substractMeanFilter(Mat image, int size)
+    public static Mat subtractMeanFilter(Mat image, int size)
     {
         Mat result = new Mat();
         Mat kernel = new Mat(size, size, CvType.CV_8SC1, new Scalar(1 / (size * size)));
@@ -75,7 +109,7 @@ public class ImageUtils {
         Mat open = opening(green, 11);
         Mat median = medianFilter(open, 5);
         Mat gaussian = gaussianFilter(median, 9, 1.8);
-        Mat shadeCorrected = substractMeanFilter(gaussian, 69);
+        Mat shadeCorrected = subtractMeanFilter(gaussian, 69);
 
         Mat result = new Mat();
         channels.set(1, shadeCorrected);
