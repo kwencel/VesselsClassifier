@@ -7,6 +7,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -362,6 +366,37 @@ public class ImageUtils {
         final Mat alpha = new Mat();
         Core.sqrt(sum, alpha);
         return alpha;
+    }
+
+    public static void generateSamplesForFolderParallel(String inputPath, String outputPath, ImageLoader imageLoader,
+            int howManyPositives, int howManyNegatives, int size) {
+
+        final Path imagesPath = Paths.get(inputPath, "images");
+        final Path masksPath = Paths.get(inputPath, "masks");
+        final Path manualsPath = Paths.get(inputPath, "manuals");
+        final File[] images = imagesPath.toFile().listFiles();
+        final File[] masks = masksPath.toFile().listFiles();
+        final File[] manuals = manualsPath.toFile().listFiles();
+        final AtomicInteger positivesIndex = new AtomicInteger(1);
+        final AtomicInteger negativesIndex = new AtomicInteger(1);
+        final ProgressInfo progressInfo = new ProgressInfo(images.length * (howManyPositives + howManyNegatives));
+        IntStream.range(0, images.length).parallel().forEach(i -> {
+            final Mat image = imageLoader.loadImage(images[i].getAbsolutePath());
+            final Mat mask = Imgcodecs.imread(masks[i].getAbsolutePath());
+            final Mat manual = Imgcodecs.imread(manuals[i].getAbsolutePath());
+            final List<Mat> positives = sampleImage(image, mask, manual, true, howManyPositives, size).get(0);
+            for (final Mat imageToSave : positives) {
+                final Path outputImagePath = Paths.get(outputPath, String.format("T_%1$03d.png", positivesIndex.getAndIncrement()));
+                Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+                progressInfo.incrementWorkCount();
+            }
+            final List<Mat> negatives = sampleImage(image, mask, manual, false, howManyNegatives, size).get(0);
+            for (final Mat imageToSave : negatives) {
+                final Path outputImagePath = Paths.get(outputPath, String.format("F_%1$03d.png", negativesIndex.getAndIncrement()));
+                Imgcodecs.imwrite(outputImagePath.toString(), imageToSave);
+                progressInfo.incrementWorkCount();
+            }
+        });
     }
 
     public static void generateSamplesForFolder(String inputPath, String outputPath, ImageLoader imageLoader,

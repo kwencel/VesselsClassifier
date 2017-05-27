@@ -20,8 +20,7 @@ public class Application {
     private static final int NUMBER_OF_SAMPLES = 5;
     private static final short NUMBER_OF_NEIGHBOURS = 11;
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
-    private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen,
-             ImageUtils::backgroundHomogenization);
+    private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen);
 
     public static void main(String[] args) throws Exception {
         nu.pattern.OpenCV.loadShared();
@@ -44,8 +43,8 @@ public class Application {
                 throw new RuntimeException("Could not create 'samples' directory");
             }
             System.out.println("Generating samples...");
-            ImageUtils.generateSamplesForFolder(trainingDir, samplesPath.toString(), imageLoader,
-                                                NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
+            ImageUtils.generateSamplesForFolderParallel(trainingDir, samplesPath.toString(), imageLoader,
+                                                        NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
         final File workingDir = new File(workingFile).getParentFile().getParentFile();
         final Path resultsPath = Paths.get(workingDir.getAbsolutePath(), "results");
