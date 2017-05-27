@@ -1,3 +1,4 @@
+import com.google.common.io.Files;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -60,7 +61,7 @@ public class Application {
         final AbstractClassifier classifier = getTrainedClassifier(samples);
 
         final Mat image = imageLoader.loadImage(workingFile);
-        final Mat result = new Mat(image.size(), image.type(), new Scalar(0));
+        final Mat resultMask = new Mat(image.size(), image.type(), new Scalar(0));
         ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
             System.out.println("Processing image " + workingFile);
@@ -71,7 +72,7 @@ public class Application {
                     for (int x = 0; x < image.width(); x++) {
                         final Mat surrounding = ImageUtils.getSurroundingPixels(image, x, finalY, SIZE);
                         if (classifier.isVessel(surrounding, surrounding.width() / 2, surrounding.height() / 2)) {
-                            result.put(finalY, x, 255, 255, 255);
+                            resultMask.put(finalY, x, 255, 255, 255);
                         }
                         progressInfo.incrementWorkCount();
                     }
@@ -84,18 +85,26 @@ public class Application {
             System.gc();
         }
 
+        String referenceMaskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
+                                                        "masks").getAbsolutePath();
+        Mat referenceMask = Imgcodecs.imread(referenceMaskPath);
+
         // Post-process the image
         ImageProcessor postProcessor = new ImageProcessor((Mat resultImage) -> {
-            File mask = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks");
-            Mat maskImage = Imgcodecs.imread(mask.getAbsolutePath());
-            Core.min(resultImage, maskImage, result);
-            return result;
+            Core.min(resultImage, referenceMask, resultMask);
+            return resultMask;
         });
-        Mat processedResult = postProcessor.applyProcessors(result);
+
+        System.out.println("Postprocessing image");
+        Mat processedResult = postProcessor.applyProcessors(resultMask);
 
         String resultFile = Paths.get(resultsPath.toString(), (new File(workingFile)).getName()).toString();
-        System.out.println(resultFile);
+        System.out.println("Saving result mask " + resultFile);
         Imgcodecs.imwrite(resultFile, processedResult);
+
+        System.out.println("Computing and saving statistics");
+        StatisticUtils.writeStatistics(referenceMask, resultMask,
+                                       Paths.get(resultsPath.toString(), (Files.getNameWithoutExtension(workingFile) + "_stats.txt")).toString());
     }
 
     private AbstractClassifier getTrainedClassifier(File[] samples) {
@@ -127,4 +136,6 @@ public class Application {
         }
         return otherFiles[imageIndex];
     }
+
+
 }

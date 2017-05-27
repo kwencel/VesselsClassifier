@@ -1,3 +1,11 @@
+import org.opencv.core.Mat;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,5 +83,55 @@ public class StatisticUtils {
             standardDeviations.add(Math.sqrt(sumOfSquaredDeviations / numberOfAttributes));
         }
         return standardDeviations;
+    }
+
+    public static double computeMeanSquaredError(Mat referenceMask, Mat resultMask) {
+        int nominator = 0;
+        int denominator = 0;
+        for (int y = 0; y < referenceMask.height(); ++y) {
+            for (int x = 0; x < referenceMask.width(); ++x) {
+                nominator += Math.pow(ImageUtils.isWhiteInt(referenceMask.get(y, x)) - ImageUtils.isWhiteInt(resultMask.get(y, x)), 2);
+                ++denominator;
+            }
+        }
+        return (double) nominator / denominator;
+    }
+
+    public static ConfusionMatrix computeConfusionMatrix(Mat referenceMask, Mat resultMask) {
+        int truePositiveAmount = 0;
+        int trueNegativeAmount = 0;
+        int falsePositiveAmount = 0;
+        int falseNegativeAmount = 0;
+
+        for (int y = 0; y < referenceMask.height(); ++y) {
+            for (int x = 0; x < referenceMask.width(); ++x) {
+                boolean referenceIsVessel = ImageUtils.isWhite(referenceMask.get(y,x));
+                boolean resultIsVessel = ImageUtils.isWhite(resultMask.get(y,x));
+                if (referenceIsVessel && resultIsVessel) {
+                    ++truePositiveAmount;
+                } else if (!referenceIsVessel && !resultIsVessel) {
+                    ++trueNegativeAmount;
+                } else if (referenceIsVessel) {
+                    ++falseNegativeAmount;
+                } else {
+                    ++falsePositiveAmount;
+                }
+            }
+        }
+
+        return new ConfusionMatrix(truePositiveAmount, trueNegativeAmount, falsePositiveAmount, falseNegativeAmount);
+    }
+
+    public static void writeStatistics(Mat referenceMask, Mat resultMask, String pathToFile) {
+        final double meanSquaredError = computeMeanSquaredError(referenceMask, resultMask);
+        final ConfusionMatrix confusionMatrix = computeConfusionMatrix(referenceMask, resultMask);
+        final Path path = Paths.get(pathToFile);
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            writer.write("Mean square error ");
+            writer.write(String.valueOf(meanSquaredError) + "\n");
+            writer.write(confusionMatrix.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
