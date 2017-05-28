@@ -1,3 +1,4 @@
+import com.google.common.io.Files;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -22,8 +23,11 @@ public class Application {
     private static final VariantModel VARIANT_MODEL = VariantModel.HU_MOMENTS;
     private final ImageLoader imageLoader = new ImageLoader(ImageUtils::equalizeOnlyGreen);
 
-    public static void main(String[] args) throws Exception {
+    public Application() {
         nu.pattern.OpenCV.loadShared();
+    }
+
+    public static void main(String[] args) throws Exception {
         Application app = new Application();
         if (args.length != 2) {
             System.err.println("Proper arguments: <Training dir containing 'images', 'manuals' and 'masks' subdirs> <image_to_classify>");
