@@ -87,8 +87,7 @@ public class Application {
 
         // Post-process the image
         ImageProcessor postProcessor = new ImageProcessor((Mat resultImage) -> {
-            String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
-                                                   "masks").getAbsolutePath();
+            String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks").getAbsolutePath();
             Mat mask = Imgcodecs.imread(maskPath);
             Core.min(resultImage, mask, result);
             return result;
@@ -138,6 +137,4 @@ public class Application {
         }
         return otherFiles[imageIndex];
     }
-
-
 }
