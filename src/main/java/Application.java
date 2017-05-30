@@ -93,11 +93,9 @@ public class Application {
                 (Mat resultImage) -> {
                     String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks").getAbsolutePath();
                     Mat mask = Imgcodecs.imread(maskPath);
-                    Core.min(resultImage, mask, result);
-                    return result;
-                }, (Mat resultImage) -> {
-                    return ImageUtils.opening(resultImage, 11);
-                }
+                    Core.min(resultImage, mask, resultImage);
+                    return resultImage;
+                }, (Mat resultImage) -> ImageUtils.opening(resultImage, 7)
         );
 
         System.out.println("Postprocessing image");
@@ -111,7 +109,7 @@ public class Application {
         String referenceManualPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
                 "manuals").getAbsolutePath();
         Mat referenceManual = Imgcodecs.imread(referenceManualPath);
-        StatisticUtils.writeStatistics(referenceManual, result,
+        StatisticUtils.writeStatistics(referenceManual, processedResult,
                 Paths.get(resultsPath.toString(), (Files.getNameWithoutExtension(workingFile) + "_stats.txt")).toString());
     }
 
