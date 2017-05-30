@@ -51,6 +51,7 @@ public class StatisticUtils {
      */
     public static List<Double> means(List<TrainingVector> trainingVectors) {
         final int numberOfAttributes = trainingVectors.get(0).getVectorData().size();
+        final int vectorSize = trainingVectors.size();
         final List<Double> means = new ArrayList<>(numberOfAttributes);
 
         for (int i = 0; i < numberOfAttributes; i++) {
@@ -58,7 +59,7 @@ public class StatisticUtils {
             for (TrainingVector trainingVector : trainingVectors) {
                 sum += trainingVector.getVectorData().get(i);
             }
-            means.add(sum / numberOfAttributes);
+            means.add(sum / vectorSize);
         }
         return means;
     }
@@ -72,6 +73,7 @@ public class StatisticUtils {
      */
     public static List<Double> standardDeviations(List<TrainingVector> trainingVectors, List<Double> means) {
         final int numberOfAttributes = trainingVectors.get(0).getVectorData().size();
+        final int vectorSize = trainingVectors.size();
         final List<Double> standardDeviations = new ArrayList<>(numberOfAttributes);
 
         for (int i = 0; i < numberOfAttributes; i++) {
@@ -80,7 +82,7 @@ public class StatisticUtils {
                 final Double deviation = trainingVector.getVectorData().get(i) - means.get(i);
                 sumOfSquaredDeviations += deviation * deviation;
             }
-            standardDeviations.add(Math.sqrt(sumOfSquaredDeviations / numberOfAttributes));
+            standardDeviations.add(Math.sqrt(sumOfSquaredDeviations / vectorSize));
         }
         return standardDeviations;
     }
