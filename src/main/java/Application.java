@@ -48,7 +48,7 @@ public class Application {
             }
             System.out.println("Generating samples...");
             ImageUtils.generateSamplesForFolderParallel(trainingDir, samplesPath.toString(), imageLoader,
-                                                        NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
+                    NUMBER_OF_SAMPLES, NUMBER_OF_SAMPLES, SIZE);
         }
         final File workingDir = new File(workingFile).getParentFile().getParentFile();
         final Path resultsPath = Paths.get(workingDir.getAbsolutePath(), "results");
@@ -89,12 +89,16 @@ public class Application {
         }
 
         // Post-process the image
-        ImageProcessor postProcessor = new ImageProcessor((Mat resultImage) -> {
-            String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks").getAbsolutePath();
-            Mat mask = Imgcodecs.imread(maskPath);
-            Core.min(resultImage, mask, result);
-            return result;
-        });
+        ImageProcessor postProcessor = new ImageProcessor(
+                (Mat resultImage) -> {
+                    String maskPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(), "masks").getAbsolutePath();
+                    Mat mask = Imgcodecs.imread(maskPath);
+                    Core.min(resultImage, mask, result);
+                    return result;
+                }, (Mat resultImage) -> {
+                    return ImageUtils.opening(resultImage, 11);
+                }
+        );
 
         System.out.println("Postprocessing image");
         Mat processedResult = postProcessor.applyProcessors(result);
@@ -105,10 +109,10 @@ public class Application {
 
         System.out.println("Computing and saving statistics");
         String referenceManualPath = getCorrespondingFile(workingDir.getAbsolutePath(), (new File(workingFile)).getName(),
-                                               "manuals").getAbsolutePath();
+                "manuals").getAbsolutePath();
         Mat referenceManual = Imgcodecs.imread(referenceManualPath);
         StatisticUtils.writeStatistics(referenceManual, result,
-                                       Paths.get(resultsPath.toString(), (Files.getNameWithoutExtension(workingFile) + "_stats.txt")).toString());
+                Paths.get(resultsPath.toString(), (Files.getNameWithoutExtension(workingFile) + "_stats.txt")).toString());
     }
 
     private AbstractClassifier getTrainedClassifier(File[] samples) {
