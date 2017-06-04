@@ -95,7 +95,7 @@ public class Application {
                     Mat mask = Imgcodecs.imread(maskPath);
                     Core.min(resultImage, mask, resultImage);
                     return resultImage;
-                }, (Mat resultImage) -> ImageUtils.opening(resultImage, 7)
+                }
         );
 
         System.out.println("Postprocessing image");
