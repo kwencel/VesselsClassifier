@@ -1,7 +1,26 @@
 # Blood vessel for retinal images using KNN classifier
 
-(We used images from ![HRF database](https://www5.cs.fau.de/research/data/fundus-images/))
+(We used images from [HRF database](https://www5.cs.fau.de/research/data/fundus-images/))
 
+### Instructions
+First clone the repository:
+```
+git clone https://github.com/kwencel/VesselsClassifier.git
+```
+Next go to the root directory and run:
+```
+./gradlew fatJar
+```
+This will produce a jar with all dependencies.
+
+Run the program with example images:
+```
+java -jar ./build/libs/VesselsClassifier-all-1.0-SNAPSHOT.jar ./Examples/training/ ./Examples/test/images/01_dr.JPG
+```
+This may take a while depending on your CPU.
+Results will be written to `./Examples/test/results`
+
+### Manual segmentation
 
 | Input image | Manualy labeled image |
 |---|---|
